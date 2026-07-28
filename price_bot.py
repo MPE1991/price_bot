@@ -5,11 +5,15 @@ from telegram import Bot
 import jdatetime
 from datetime import datetime
 import asyncio
-from datetime import datetime
 import pytz
+import os
 # ============ تنظیمات ============
-TELEGRAM_TOKEN = "8971414276:AAEYTqEgnhr5_FSvw-dnICkYPkSu_53xzYw"
+# توکن رو از environment variable می‌خونیم، نه اینکه مستقیم توی کد بنویسیم
+TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 CHANNEL_USERNAME = "@jalebposts"
+
+if not TELEGRAM_TOKEN:
+    raise ValueError("متغیر محیطی TELEGRAM_TOKEN تنظیم نشده است!")
 
 bot = Bot(token=TELEGRAM_TOKEN)
 
@@ -119,19 +123,18 @@ async def send_prices():
     """دریافت و ارسال قیمت‌ها"""
     dollar = get_dollar_price()
     gold = get_gold_price()
-    gold_ounce = get_gold_ounce_price()
-    silver_ounce = get_silver_ounce_price()
+    gold_ounce = get_gold_ounce()
+    silver_ounce = get_silver_ounce()
     tether = get_tether_price()
     oil = get_oil_price()
     
     # ساعت تهران
-    from datetime import datetime
-    import pytz
     tehran_tz = pytz.timezone('Asia/Tehran')
-    time_str = datetime.now(tehran_tz).strftime('%H:%M')
+    now_tehran = datetime.now(tehran_tz)
+    time_str = now_tehran.strftime('%H:%M')
     
-    # تاریخ شمسی (فرض می‌کنم قبلاً jalali_date رو داری)
-    # jalali_date = ...
+    # تاریخ شمسی
+    jalali_date = jdatetime.datetime.fromgregorian(datetime=now_tehran)
     
     # ============ ساخت متن پیام ============
     text = f"""💰 قیمت‌های لحظه‌ای بازار:
@@ -162,7 +165,7 @@ async def main():
     """ارسال هر ۲ دقیقه یک‌بار"""
     while True:
         await send_prices()
-        await asyncio.sleep(120)  # ۱۲۰ ثانیه = ۲ دقیقه
+        await asyncio.sleep(1800)  # ۱۲۰ ثانیه = ۲ دقیقه
 
 if __name__ == "__main__":
     asyncio.run(main())
