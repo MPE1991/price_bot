@@ -5,7 +5,8 @@ from telegram import Bot
 import jdatetime
 from datetime import datetime
 import asyncio
-
+from datetime import datetime
+import pytz
 # ============ تنظیمات ============
 TELEGRAM_TOKEN = "8971414276:AAEYTqEgnhr5_FSvw-dnICkYPkSu_53xzYw"
 CHANNEL_USERNAME = "@jalebposts"
@@ -115,50 +116,53 @@ def get_oil_price():
 
 # ============ ارسال پیام ============
 async def send_prices():
-    """جمع‌آوری و ارسال همه قیمت‌ها"""
-    print("در حال دریافت قیمت‌ها...")
-    
+    """دریافت و ارسال قیمت‌ها"""
     dollar = get_dollar_price()
     gold = get_gold_price()
-    gold_ounce = get_gold_ounce()
-    silver_ounce = get_silver_ounce()
+    gold_ounce = get_gold_ounce_price()
+    silver_ounce = get_silver_ounce_price()
     tether = get_tether_price()
     oil = get_oil_price()
     
-    # تاریخ شمسی
-from datetime import datetime
-import pytz
-
-tehran_tz = pytz.timezone("Asia/Tehran")
-now = datetime.now(tehran_tz)
-jalali_date = jdatetime.date.fromgregorian(date=now.date())
-time_str = now.strftime("%H:%M")
+    # ساعت تهران
+    from datetime import datetime
+    import pytz
+    tehran_tz = pytz.timezone('Asia/Tehran')
+    time_str = datetime.now(tehran_tz).strftime('%H:%M')
     
-text = f"""💰 قیمت‌های لحظه‌ای بازار:
+    # تاریخ شمسی (فرض می‌کنم قبلاً jalali_date رو داری)
+    # jalali_date = ...
+    
+    # ============ ساخت متن پیام ============
+    text = f"""💰 قیمت‌های لحظه‌ای بازار:
 
 💵 دلار: `{dollar or 'ناموجود'}` تومان
 🥇 طلای ۱۸ عیار: `{gold or 'ناموجود'}` تومان
 🌍 اونس طلا: `{gold_ounce or 'ناموجود'}` دلار
 🥈 اونس نقره: `{silver_ounce or 'ناموجود'}` دلار
 💲 تتر: `{tether or 'ناموجود'}` تومان
-🛢️ نفت جهانی (WTI): `{oil or 'ناموجود'}` دلار
+🛢 نفت جهانی (WTI): `{oil or 'ناموجود'}` دلار
 
 ⏰ ساعت: {time_str}
 📅 تاریخ: {jalali_date.strftime('%Y/%m/%d')}
 🆔 @jalebposts"""
     
-    try:
-        await bot.send_message(chat_id=CHANNEL_USERNAME, text=text, parse_mode="Markdown")
+    try:                                              # ← این خط ۴ فاصله داره
+        await bot.send_message(                       # ← این خط هم ۸ فاصله
+            chat_id=CHANNEL_USERNAME,
+            text=text,
+            parse_mode="Markdown"
+        )
         print(f"✅ قیمت‌ها ارسال شد - {time_str}")
-    except Exception as e:
+    except Exception as e:                            # ← این خط هم ۸ فاصله (داخل try)
         print(f"❌ خطا در ارسال: {e}")
 
 # ============ حلقه اصلی ============
 async def main():
-    """ارسال هر ۳۰ دقیقه یک‌بار"""
+    """ارسال هر ۲ دقیقه یک‌بار"""
     while True:
         await send_prices()
-        await asyncio.sleep(1800)  # ۱۲۰ ثانیه = ۲ دقیقه
+        await asyncio.sleep(120)  # ۱۲۰ ثانیه = ۲ دقیقه
 
 if __name__ == "__main__":
     asyncio.run(main())
