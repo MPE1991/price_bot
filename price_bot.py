@@ -165,7 +165,7 @@ async def main():
     """ارسال هر ۲ دقیقه یک‌بار"""
     while True:
         await send_prices()
-        await asyncio.sleep(1800)  # ۱۲۰ ثانیه = ۲ دقیقه
+        await asyncio.sleep(7200)  # ۱۲۰ ثانیه = ۲ دقیقه
 
 if __name__ == "__main__":
     asyncio.run(main())
