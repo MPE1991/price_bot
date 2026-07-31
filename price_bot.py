@@ -145,7 +145,6 @@ async def send_prices():
 🥈 اونس نقره: `{silver_ounce or 'ناموجود'}` دلار
 💲 تتر: `{tether or 'ناموجود'}` تومان
 🛢 نفت جهانی (WTI): `{oil or 'ناموجود'}` دلار
-
 ⏰ ساعت: {time_str}
 📅 تاریخ: {jalali_date.strftime('%Y/%m/%d')}
 🆔 @jalebposts"""
@@ -162,10 +161,20 @@ async def send_prices():
 
 # ============ حلقه اصلی ============
 async def main():
-    """ارسال هر ۲ دقیقه یک‌بار"""
+    """ارسال هر ۲ ساعت یک‌بار با مدیریت خطا"""
+    print("🤖 ربات قیمت شروع به کار کرد!")
+    
     while True:
-        await send_prices()
-        await asyncio.sleep(7200)  # ۱۲۰ ثانیه = ۲ دقیقه
+        try:
+            await send_prices()
+            print(f"⏰ منتظر {SEND_INTERVAL//3600} ساعت برای ارسال بعدی...")
+        except Exception as e:
+            print(f"❌ خطا در ارسال: {e}")
+            print(f"⏰ بعد از {SEND_INTERVAL//3600} ساعت دوباره تلاش می‌کنم...")
+        
+        # ✅ همیشه ۲ ساعت صبر کن، چه موفق بشه چه خطا بده
+        await asyncio.sleep(SEND_INTERVAL)
 
-if __name__ == "__main__":
+
+if _name_ == "_main_":
     asyncio.run(main())
