@@ -7,6 +7,8 @@ from datetime import datetime
 import asyncio
 import pytz
 import os
+
+SEND_INTERVAL = 7200  # ۲ ساعت 
 # ============ تنظیمات ============
 # توکن رو از environment variable می‌خونیم، نه اینکه مستقیم توی کد بنویسیم
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
