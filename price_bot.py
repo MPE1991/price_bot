@@ -8,11 +8,11 @@ import asyncio
 import pytz
 import os
 
-SEND_INTERVAL = 7200  # ۲ ساعت 
+SEND_INTERVAL = 3600  # ۲ ساعت 
 # ============ تنظیمات ============
 # توکن رو از environment variable می‌خونیم، نه اینکه مستقیم توی کد بنویسیم
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
-CHANNEL_USERNAME = "@jalebposts"
+CHANNEL_USERNAME = "@MarketPulseIR"
 
 if not TELEGRAM_TOKEN:
     raise ValueError("متغیر محیطی TELEGRAM_TOKEN تنظیم نشده است!")
