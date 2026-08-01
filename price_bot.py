@@ -149,6 +149,7 @@ async def send_prices():
 🛢 نفت جهانی (WTI): `{oil or 'ناموجود'}` دلار
 ⏰ ساعت: {time_str}
 📅 تاریخ: {jalali_date.strftime('%Y/%m/%d')}
+🆔 @MarketPulseIR"""
 🆔 @jalebposts"""
     
     try:                                              # ← این خط ۴ فاصله داره
