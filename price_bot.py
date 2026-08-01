@@ -150,7 +150,6 @@ async def send_prices():
 ⏰ ساعت: {time_str}
 📅 تاریخ: {jalali_date.strftime('%Y/%m/%d')}
 🆔 @MarketPulseIR"""
-🆔 @jalebposts"""
     
     try:                                              # ← این خط ۴ فاصله داره
         await bot.send_message(                       # ← این خط هم ۸ فاصله
