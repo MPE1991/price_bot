@@ -60,12 +60,26 @@ def get_gold_silver_ounce():
     خروجی: (gold_ounce, silver_ounce) به صورت رشته یا (None, None) در صورت خطا
     """
     try:
-        url = "https://data-asg.goldprice.org/dbXRates/USD"
         headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Referer": "https://goldprice.org/",
+            "Origin": "https://goldprice.org",
         }
-        response = requests.get(url, headers=headers, timeout=10)
+        session = requests.Session()
+        # اول یک بار صفحه‌ی اصلی رو باز می‌کنیم تا کوکی‌های لازم ست بشن
+        # و درخواست بعدی به API به‌عنوان ربات شناسایی و بلاک نشه
+        session.get("https://goldprice.org/", headers=headers, timeout=10)
+
+        url = "https://data-asg.goldprice.org/dbXRates/USD"
+        response = session.get(url, headers=headers, timeout=10)
+
+        if response.status_code != 200:
+            print(f"خطای اونس طلا/نقره: کد وضعیت {response.status_code} - {response.text[:200]}")
+            return None, None
+
         data = response.json()
         item = data["items"][0]
         gold_ounce = f"{float(item['xauPrice']):,.2f}"
@@ -145,7 +159,7 @@ async def send_prices():
 🌍 اونس طلا: `{gold_ounce or 'ناموجود'}` دلار
 🥈 اونس نقره: `{silver_ounce or 'ناموجود'}` دلار
 💲 تتر: `{tether or 'ناموجود'}` تومان
-🛢 نفت WTI: `{oil_wti or 'ناموجود'}` دلار
+🛢 نفت \u2066WTI: `{oil_wti or 'ناموجود'}`\u2069 دلار
 🛢 نفت برنت: `{oil_brent or 'ناموجود'}` دلار
 ⏰ ساعت: {time_str}
 📅 تاریخ: {jalali_date.strftime('%Y/%m/%d')}
