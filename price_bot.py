@@ -159,7 +159,7 @@ async def send_prices():
 🌍 اونس طلا: `{gold_ounce or 'ناموجود'}` دلار
 🥈 اونس نقره: `{silver_ounce or 'ناموجود'}` دلار
 💲 تتر: `{tether or 'ناموجود'}` تومان
-🛢 نفت \u2066WTI: `{oil_wti or 'ناموجود'}`\u2069 دلار
+🛢 نفت وست تگزاس: `{oil_wti or 'ناموجود'}` دلار
 🛢 نفت برنت: `{oil_brent or 'ناموجود'}` دلار
 ⏰ ساعت: {time_str}
 📅 تاریخ: {jalali_date.strftime('%Y/%m/%d')}
