@@ -52,42 +52,35 @@ def get_gold_price():
         print(f"خطای طلا: {e}")
     return None
 
-def get_gold_silver_ounce():
-    """
-    قیمت اونس طلا و اونس نقره (دلار) از goldprice.org
-    این سایت قیمت‌ها رو از طریق یک API داخلی (JSON) به‌روزرسانی می‌کنه که
-    نمودار زنده‌ش هم از همون استفاده می‌کنه، پس خیلی پایدارتر از اسکرپ HTML هست.
-    خروجی: (gold_ounce, silver_ounce) به صورت رشته یا (None, None) در صورت خطا
-    """
+def get_gold_ounce():
+    """قیمت اونس طلا از tgju.org"""
     try:
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                          "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-            "Accept": "application/json, text/plain, */*",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Referer": "https://goldprice.org/",
-            "Origin": "https://goldprice.org",
-        }
-        session = requests.Session()
-        # اول یک بار صفحه‌ی اصلی رو باز می‌کنیم تا کوکی‌های لازم ست بشن
-        # و درخواست بعدی به API به‌عنوان ربات شناسایی و بلاک نشه
-        session.get("https://goldprice.org/", headers=headers, timeout=10)
-
-        url = "https://data-asg.goldprice.org/dbXRates/USD"
-        response = session.get(url, headers=headers, timeout=10)
-
-        if response.status_code != 200:
-            print(f"خطای اونس طلا/نقره: کد وضعیت {response.status_code} - {response.text[:200]}")
-            return None, None
-
-        data = response.json()
-        item = data["items"][0]
-        gold_ounce = f"{float(item['xauPrice']):,.2f}"
-        silver_ounce = f"{float(item['xagPrice']):,.2f}"
-        return gold_ounce, silver_ounce
+        url = "https://www.tgju.org/profile/ons"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(response.text, "html.parser")
+        price_element = soup.find("span", {"data-col": "info.last_trade.PDrCotVal"})
+        if price_element:
+            price_raw = price_element.text.strip().replace(",", "")
+            return f"{float(price_raw):,.2f}"
     except Exception as e:
-        print(f"خطای اونس طلا/نقره (goldprice.org): {e}")
-    return None, None
+        print(f"خطای اونس طلا: {e}")
+    return None
+
+def get_silver_ounce():
+    """قیمت اونس نقره از tgju.org"""
+    try:
+        url = "https://www.tgju.org/profile/silver"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(response.text, "html.parser")
+        price_element = soup.find("span", {"data-col": "info.last_trade.PDrCotVal"})
+        if price_element:
+            price_raw = price_element.text.strip().replace(",", "")
+            return f"{float(price_raw):,.2f}"
+    except Exception as e:
+        print(f"خطای اونس نقره: {e}")
+    return None
 
 def get_tether_price():
     """قیمت واقعی تتر به تومان از صرافی Wallex"""
@@ -139,7 +132,8 @@ async def send_prices():
     """دریافت و ارسال قیمت‌ها"""
     dollar = get_dollar_price()
     gold = get_gold_price()
-    gold_ounce, silver_ounce = get_gold_silver_ounce()
+    gold_ounce = get_gold_ounce()
+    silver_ounce = get_silver_ounce()
     tether = get_tether_price()
     oil_wti, oil_brent = get_oil_prices_yahoo()
     
