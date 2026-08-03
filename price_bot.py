@@ -52,35 +52,28 @@ def get_gold_price():
         print(f"خطای طلا: {e}")
     return None
 
-def get_gold_ounce():
-    """قیمت اونس طلا از tgju.org"""
+def get_gold_silver_ounce():
+    """
+    قیمت اونس طلا و اونس نقره (دلار) از goldprice.org
+    این سایت قیمت‌ها رو از طریق یک API داخلی (JSON) به‌روزرسانی می‌کنه که
+    نمودار زنده‌ش هم از همون استفاده می‌کنه، پس خیلی پایدارتر از اسکرپ HTML هست.
+    خروجی: (gold_ounce, silver_ounce) به صورت رشته یا (None, None) در صورت خطا
+    """
     try:
-        url = "https://www.tgju.org/profile/ons"
-        headers = {"User-Agent": "Mozilla/5.0"}
+        url = "https://data-asg.goldprice.org/dbXRates/USD"
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "application/json",
+        }
         response = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(response.text, "html.parser")
-        price_element = soup.find("span", {"data-col": "info.last_trade.PDrCotVal"})
-        if price_element:
-            price_raw = price_element.text.strip().replace(",", "")
-            return f"{float(price_raw):,.2f}"
+        data = response.json()
+        item = data["items"][0]
+        gold_ounce = f"{float(item['xauPrice']):,.2f}"
+        silver_ounce = f"{float(item['xagPrice']):,.2f}"
+        return gold_ounce, silver_ounce
     except Exception as e:
-        print(f"خطای اونس طلا: {e}")
-    return None
-
-def get_silver_ounce():
-    """قیمت اونس نقره از tgju.org"""
-    try:
-        url = "https://www.tgju.org/profile/silver"
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(response.text, "html.parser")
-        price_element = soup.find("span", {"data-col": "info.last_trade.PDrCotVal"})
-        if price_element:
-            price_raw = price_element.text.strip().replace(",", "")
-            return f"{float(price_raw):,.2f}"
-    except Exception as e:
-        print(f"خطای نقره: {e}")
-    return None
+        print(f"خطای اونس طلا/نقره (goldprice.org): {e}")
+    return None, None
 
 def get_tether_price():
     """قیمت واقعی تتر به تومان از صرافی Wallex"""
@@ -104,31 +97,37 @@ def get_tether_price():
     return None
 
 
+def get_oil_prices_yahoo():
+    """
+    قیمت لحظه‌ای نفت WTI و برنت از Yahoo Finance
+    (endpoint داخلی غیررسمی ولی پایدار و پراستفاده، نیازی به API key نداره)
+    نمادها: CL=F برای WTI و BZ=F برای برنت
+    خروجی: (wti_price, brent_price) به صورت رشته یا None در صورت خطا
+    """
+    def fetch_price(symbol):
+        try:
+            url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
+            headers = {"User-Agent": "Mozilla/5.0"}
+            response = requests.get(url, headers=headers, timeout=10)
+            data = response.json()
+            price = data["chart"]["result"][0]["meta"]["regularMarketPrice"]
+            return f"{float(price):,.2f}"
+        except Exception as e:
+            print(f"خطای دریافت قیمت {symbol} از Yahoo Finance: {e}")
+            return None
 
-def get_oil_price():
-    """قیمت نفت جهانی (WTI) از tgju.org"""
-    try:
-        url = "https://www.tgju.org/profile/oil"
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(response.text, "html.parser")
-        price_element = soup.find("span", {"data-col": "info.last_trade.PDrCotVal"})
-        if price_element:
-            price_raw = price_element.text.strip().replace(",", "")
-            return f"{float(price_raw):,.2f}"
-    except Exception as e:
-        print(f"خطای نفت: {e}")
-    return None
+    wti_price = fetch_price("CL=F")
+    brent_price = fetch_price("BZ=F")
+    return wti_price, brent_price
 
 # ============ ارسال پیام ============
 async def send_prices():
     """دریافت و ارسال قیمت‌ها"""
     dollar = get_dollar_price()
     gold = get_gold_price()
-    gold_ounce = get_gold_ounce()
-    silver_ounce = get_silver_ounce()
+    gold_ounce, silver_ounce = get_gold_silver_ounce()
     tether = get_tether_price()
-    oil = get_oil_price()
+    oil_wti, oil_brent = get_oil_prices_yahoo()
     
     # ساعت تهران
     tehran_tz = pytz.timezone('Asia/Tehran')
@@ -146,7 +145,8 @@ async def send_prices():
 🌍 اونس طلا: `{gold_ounce or 'ناموجود'}` دلار
 🥈 اونس نقره: `{silver_ounce or 'ناموجود'}` دلار
 💲 تتر: `{tether or 'ناموجود'}` تومان
-🛢 نفت جهانی (WTI): `{oil or 'ناموجود'}` دلار
+🛢 نفت WTI: `{oil_wti or 'ناموجود'}` دلار
+🛢 نفت برنت: `{oil_brent or 'ناموجود'}` دلار
 ⏰ ساعت: {time_str}
 📅 تاریخ: {jalali_date.strftime('%Y/%m/%d')}
 🆔 @MarketPulseIR"""
